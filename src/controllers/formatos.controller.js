@@ -199,4 +199,18 @@ const getFormatosById = async (req, res) => {
 };
 
 
-module.exports = { subirArchivo, listarDocumentos, actualizarArchivo, getFormatosById };
+const deleteFormatos = async (req, res) => {
+  const { id } = req.params; // Obtén el ID del documento controlado que deseas eliminar desde los parámetros de la URL
+
+  try {
+    const query = `DELETE FROM public.formatos  WHERE id = $1`;
+    await db.query(query, [id]);
+    res.json({ message: 'Formato  eliminado con éxito' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el Formato' });
+  }
+};
+
+
+module.exports = { subirArchivo, listarDocumentos, actualizarArchivo, getFormatosById, deleteFormatos };

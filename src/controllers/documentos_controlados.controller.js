@@ -26,7 +26,7 @@ const getAllDocumentosControlados = async (req, res) => {
     const { id } = req.params;
       try {
       const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.id as id_documento,  descripcion_documento, codigo_documento, fecha_revision, numero_revision, 
-        organigrama.codigo, organigrama.descripcion
+        organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion
         FROM  documentos_controlados 
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
@@ -48,7 +48,7 @@ const getAllDocumentosControlados = async (req, res) => {
     const { id } = req.params;
       try {
       const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.codigo_documento, descripcion_documento, numero_revision, 
-      codigo_documento,  organigrama.codigo, organigrama.descripcion
+      codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion
         FROM  documentos_controlados
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
@@ -75,7 +75,7 @@ const getAllDocumentosControlados = async (req, res) => {
 
   const createDocumentoControlado = async (req, res) => {
     try {
-      const { organigrama_id,  documento_id,  } = req.body;
+      const { organigrama_id,  documento_id, observacion  } = req.body;
   
         // Verificar si los valores ya existen en la tabla
         const checkQuery = 'SELECT * FROM documentos_controlados WHERE documento_id = $1 AND organigrama_id = $2';
@@ -87,8 +87,8 @@ const getAllDocumentosControlados = async (req, res) => {
         }
   
         // Si no existen, realizar la inserción
-        const insertQuery = 'INSERT INTO documentos_controlados (documento_id, organigrama_id ) VALUES ($1, $2 ) RETURNING *';
-        const result = await db.query(insertQuery, [documento_id, organigrama_id]);
+        const insertQuery = 'INSERT INTO documentos_controlados (documento_id, organigrama_id, observacion ) VALUES ($1, $2, $3 ) RETURNING *';
+        const result = await db.query(insertQuery, [documento_id, organigrama_id, observacion]);
   
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -108,11 +108,11 @@ const getAllDocumentosControlados = async (req, res) => {
 const updateDocumentoControlado = async (req, res) => {
     try {
       const { id } = req.params;
-      const { organigrama_id,  documento_id,  } = req.body;
+      const { organigrama_id,  documento_id, observacion  } = req.body;
   
-      const query = 'UPDATE documentos_controlados SET organigrama_id = $1, documento_id = $2 WHERE id = $3 RETURNING *';
+      const query = 'UPDATE documentos_controlados SET organigrama_id = $1, documento_id = $2, observacion = $3 WHERE id = $4 RETURNING *';
   
-      const result = await db.query(query, [organigrama_id, documento_id, id]);
+      const result = await db.query(query, [organigrama_id, documento_id, observacion, id]);
   
       if (result.rowCount === 0) {
         res.status(404).json({ error: 'Documento controlado no encontrado' });

@@ -14,6 +14,9 @@ router.get('/listado/publicos', documentosController.listarDocumentosPublicos);
 router.get('/listado/fecha/revision', documentosController.listarDocumentosFechaRevision);
 router.get('/reportes/general', documentosController.getDocumentoReporteGeneral);
 router.get('/reportes/obsoletos', documentosController.getDocumentoReporteObsoletos);
+router.get('/reportes/vencidos', documentosController.getDocumentoReporteVencidos);
+// Ruta para obtener documentos vencidos filtrando por organigrama_id
+router.get('/reportes/vencidos/:organigramaId', documentosController.getDocumentoReporteVencidosPorOrganigrama);
 // Obtener un tipo de documento por su ID
 router.get('/:id', documentosController.getDocumentoById);
 router.get('/reporte/:id', documentosController.getDocumentoByIdReporte);

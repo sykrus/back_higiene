@@ -8,6 +8,7 @@ const router = Router();
 router.post('/subir-archivo', formatosController.subirArchivo);
 router.get('/listado', formatosController.listarDocumentos);
 router.get('/:id', formatosController.getFormatosById);
+router.delete('/:id', formatosController.deleteFormatos);
 
 router.put('/actualizar-archivo/:id', formatosController.actualizarArchivo);
 

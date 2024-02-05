@@ -131,6 +131,19 @@ const listarDocumentos = async (req, res) => {
 };
 
 
+const deleteDocumentoPublico = async (req, res) => {
+  const { id } = req.params; // Obtén el ID del documento controlado que deseas eliminar desde los parámetros de la URL
+
+  try {
+    const query = `DELETE FROM documentos_publicos WHERE id = $1`;
+    await db.query(query, [id]);
+    res.json({ message: 'Documento  eliminado con éxito' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el documento' });
+  }
+};
 
 
-module.exports = { subirArchivo, listarDocumentos };
+
+module.exports = { subirArchivo, listarDocumentos, deleteDocumentoPublico };

@@ -1,0 +1,32 @@
+Direccion IP: 172.16.0.65
+Puerto SSH: 22
+Usuario SSH: ranjel
+Contraseña SSH: R4fa2024
+
+Servidor base de datos
+pgadmin 4
+server:higiene
+nombre: 172.16.0.65
+puerto: 5432
+bd:app_higiene
+admnin	
+12345
+
+// SERVIDOR INTRANET VIEJO
+DIreccion IP: 172.16.0.37
+Puerto SSH: 1855
+Usuario SSH: soporte
+Contraseña SSH: T3cn0l0g14
+
+URL del Sistema: http://172.16.0.37/calidad/sisgc/index.php
+Ruta absoluta de la carpeta: /var/www/calidad/
+
+URL Base de Datos: http://172.16.0.37/phpmyadmin/index.php
+Usuario de PhpMyAdmin: intranet
+Contraseña de PhpMyAdmin: 1ntr4n3t2024
+Nombre de Base de Datos: bdcalidad
+
+https://github.com/sykrus/back_higiene
+sykrus22@gmail.com
+token clave:
+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
