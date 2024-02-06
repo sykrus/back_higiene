@@ -396,6 +396,8 @@ const CapturarCodigoDocumento = async (req, res) => {
 
 
 
+
+
 const getDocumentoReporteGeneral = async (req, res) => {
   db.query(`SELECT tipo_documento, ARRAY_AGG(
     json_build_object(
@@ -627,9 +629,69 @@ const getDocumentoReporteVencidosPorOrganigrama = async (req, res) => {
   }
 };
 
+async function obtenerDocumentosPorOrganigrama(organigrama_id) {
+  try {
+      // Obtener todos los tipos de documentos
+      const tiposDocumentosQuery = `
+          SELECT *
+          FROM tipo_documentos
+      `;
+      const tiposDocumentosResult = await db.query(tiposDocumentosQuery);
+
+      // Obtener los últimos documentos para cada tipo_documento y organigrama_id
+      const documentosQuery = `
+          SELECT id, codigo_documento, tipo_documento, organigrama_id
+          FROM (
+              SELECT
+                  d.id,
+                  d.codigo_documento,
+                  td.tipo_documento,
+                  d.organigrama_id,
+                  ROW_NUMBER() OVER (PARTITION BY td.tipo_documento ORDER BY d.id DESC) AS rn
+              FROM public.documentos d
+              LEFT JOIN tipo_documentos td ON d.tipo_documento_id = td.id
+              WHERE d.organigrama_id = $1
+          ) AS subquery
+          WHERE rn = 1
+      `;
+      const documentosResult = await db.query(documentosQuery, [organigrama_id]);
+
+      // Mapear los documentos existentes
+      const documentos = documentosResult.rows.map(doc => {
+          return {
+              id: doc.id,
+              codigo_documento: doc.codigo_documento,
+              tipo_documento: doc.tipo_documento,
+              organigrama_id: doc.organigrama_id
+          };
+      });
+
+      // Identificar los tipos de documentos que no tienen un documento asociado
+      const tiposSinDocumento = tiposDocumentosResult.rows.filter(tipo => !documentos.find(doc => doc.tipo_documento === tipo.id));
+
+      // Crear nuevos documentos con "siglas_codigo-001" para los tipos sin documento asociado
+      const nuevosDocumentos = tiposSinDocumento.map(tipo => {
+          return {
+              codigo_documento: `${tipo.siglas_codigo}-001`,
+              tipo_documento: tipo.tipo_documento,
+              organigrama_id
+          };
+      });
+
+      // Combinar los documentos existentes y los nuevos documentos creados
+      const resultado = {
+          documentos: [...documentos, ...nuevosDocumentos]
+      };
+
+      return resultado;
+  } catch (error) {
+      console.error('Error al obtener documentos:', error);
+      throw new Error('Error al obtener documentos.');
+  }
+}
 
 
 module.exports = { subirArchivo, listarDocumentos, updateDocumento, getDocumentoReporteGeneral, getDocumentoById, actualizarArchivo, getDocumentoByIdReporte, 
   getDocumentoByIdReporteOrganigrama, getDocumentoByIdReporteOrganigramaNormas, CapturarCodigoDocumento, getDocumentoReporteObsoletos, listarDocumentosFechaRevision, listarDocumentosPublicos, 
-  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama
+  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama, obtenerDocumentosPorOrganigrama
 };

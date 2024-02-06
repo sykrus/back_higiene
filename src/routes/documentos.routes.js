@@ -25,6 +25,18 @@ router.get('/reporte/organigrama/:id/:datosNormas', documentosController.getDocu
 router.get('/codigo/:tipoDocumentoId/:organigramaId', documentosController.CapturarCodigoDocumento);
 
 
+router.get('/obtener/documentos/organigrama/:organigrama_id', async (req, res) => {
+  try {
+      const organigrama_id = req.params.organigrama_id;
+
+      const resultado = await documentosController.obtenerDocumentosPorOrganigrama(organigrama_id);
+
+      res.json(resultado);
+  } catch (error) {
+      console.error('Error en la ruta obtenerDocumentosPorOrganigrama:', error);
+      res.status(500).json({ error: 'Error al obtener documentos.' });
+  }
+});
 
 
 

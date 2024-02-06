@@ -159,6 +159,51 @@ const updateDocumentoControlado = async (req, res) => {
 
 
 
+  const createMultipleDocumentosControlados = async (req, res) => {
+    try {
+        const { documento_id } = req.params;
+        const { observacion } = req.body;
+
+        // Validar que documento_id no sea una cadena vacía o nulo
+        if (!documento_id) {
+            return res.status(400).json({ error: 'El documento_id no puede estar vacío.' });
+        }
+
+        // Convertir documento_id a un entero
+        const documento_id_as_integer = parseInt(documento_id, 10);
+
+        // Validar que documento_id_as_integer sea un número válido
+        if (isNaN(documento_id_as_integer)) {
+            return res.status(400).json({ error: 'El documento_id debe ser un número válido.' });
+        }
+
+        // Obtener todos los organigramas de la tabla organigrama
+        const organigramasQuery = 'SELECT organigrama_id FROM organigrama';
+        const organigramasResult = await db.query(organigramasQuery);
+
+        // Verificar si los valores ya existen en la tabla para cada organigrama
+        const checkQuery = 'SELECT * FROM documentos_controlados WHERE documento_id = $1 AND organigrama_id = $2';
+
+        // Realizar las inserciones en un bucle para cada organigrama
+        for (const row of organigramasResult.rows) {
+            const organigrama_id = row.organigrama_id;
+
+            const checkResult = await db.query(checkQuery, [documento_id_as_integer, organigrama_id]);
+
+            if (checkResult.rows.length === 0) {
+                // Si no existe, realizar la inserción
+                const insertQuery = 'INSERT INTO documentos_controlados (documento_id, organigrama_id, observacion) VALUES ($1, $2, $3) RETURNING *';
+                await db.query(insertQuery, [documento_id_as_integer, organigrama_id, observacion]);
+            }
+        }
+
+        res.status(201).json({ message: 'Inserciones exitosas en todos los organigramas.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al crear los documentos controlados' });
+    }
+};
+
   module.exports = {
     createDocumentoControlado,
     getAllDocumentosControlados,
@@ -166,6 +211,7 @@ const updateDocumentoControlado = async (req, res) => {
     getDocumentoControladoById, // Agrega el controlador para obtener por ID
     getControladosPorDocumentoId,
     getControladosReportesPorDocumentoId,
-    deleteDocumentoControlado 
+    deleteDocumentoControlado,
+    createMultipleDocumentosControlados 
 
   };
