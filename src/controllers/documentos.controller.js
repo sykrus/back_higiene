@@ -631,64 +631,103 @@ const getDocumentoReporteVencidosPorOrganigrama = async (req, res) => {
 
 async function obtenerDocumentosPorOrganigrama(organigrama_id) {
   try {
-      // Obtener todos los tipos de documentos
-      const tiposDocumentosQuery = `
-          SELECT *
-          FROM tipo_documentos
-      `;
-      const tiposDocumentosResult = await db.query(tiposDocumentosQuery);
+    // Obtener todos los tipos de documentos
+    const tiposDocumentosQuery = `
+      SELECT *
+      FROM tipo_documentos
+    `;
+    const tiposDocumentosResult = await db.query(tiposDocumentosQuery);
 
-      // Obtener los últimos documentos para cada tipo_documento y organigrama_id
-      const documentosQuery = `
-          SELECT id, codigo_documento, tipo_documento, organigrama_id
-          FROM (
-              SELECT
-                  d.id,
-                  d.codigo_documento,
-                  td.tipo_documento,
-                  d.organigrama_id,
-                  ROW_NUMBER() OVER (PARTITION BY td.tipo_documento ORDER BY d.id DESC) AS rn
-              FROM public.documentos d
-              LEFT JOIN tipo_documentos td ON d.tipo_documento_id = td.id
-              WHERE d.organigrama_id = $1
-          ) AS subquery
-          WHERE rn = 1
-      `;
-      const documentosResult = await db.query(documentosQuery, [organigrama_id]);
+    // Obtener los últimos documentos para cada tipo_documento y organigrama_id
+    const documentosQuery = `
+      SELECT id, codigo_documento, tipo_documento, organigrama_id
+      FROM (
+        SELECT
+          d.id,
+          d.codigo_documento,
+          td.tipo_documento,
+          d.organigrama_id,
+          ROW_NUMBER() OVER (PARTITION BY td.tipo_documento ORDER BY d.id DESC) AS rn
+        FROM public.documentos d
+        LEFT JOIN tipo_documentos td ON d.tipo_documento_id = td.id
+        WHERE d.organigrama_id = $1
+      ) AS subquery
+      WHERE rn = 1
+    `;
+    const documentosResult = await db.query(documentosQuery, [organigrama_id]);
 
-      // Mapear los documentos existentes
-      const documentos = documentosResult.rows.map(doc => {
-          return {
-              id: doc.id,
-              codigo_documento: doc.codigo_documento,
-              tipo_documento: doc.tipo_documento,
-              organigrama_id: doc.organigrama_id
-          };
-      });
-
-      // Identificar los tipos de documentos que no tienen un documento asociado
-      const tiposSinDocumento = tiposDocumentosResult.rows.filter(tipo => !documentos.find(doc => doc.tipo_documento === tipo.id));
-
-      // Crear nuevos documentos con "siglas_codigo-001" para los tipos sin documento asociado
-      const nuevosDocumentos = tiposSinDocumento.map(tipo => {
-          return {
-              codigo_documento: `${tipo.siglas_codigo}-001`,
-              tipo_documento: tipo.tipo_documento,
-              organigrama_id
-          };
-      });
-
-      // Combinar los documentos existentes y los nuevos documentos creados
-      const resultado = {
-          documentos: [...documentos, ...nuevosDocumentos]
+    // Mapear los documentos existentes
+    const documentos = documentosResult.rows.map(doc => {
+      // Extraer el número del final de codigo_documento
+      const codigoDocumentoArray = doc.codigo_documento.split('-');
+      const ultimoNumero = codigoDocumentoArray.pop();
+      
+      // Convertir el último número a entero y sumarle 1
+      const nuevoUltimoNumero = parseInt(ultimoNumero) + 1;
+      
+      // Construir el nuevo código de documento
+      const nuevoCodigoDocumento = codigoDocumentoArray.join('-') + '-' + nuevoUltimoNumero.toString().padStart(3, '0');
+      
+      return {
+        id: doc.id,
+        codigo_documento: nuevoCodigoDocumento,
+        tipo_documento: doc.tipo_documento,
+        organigrama_id: doc.organigrama_id
       };
+    });
 
-      return resultado;
+  // Consulta para obtener la información del organigrama
+  const organigramaQuery = `
+  SELECT codigo as codigo_hijo, padre as organigrama_id_padre 
+  FROM organigrama 
+  WHERE id = $1
+`;
+const organigramaResult = await db.query(organigramaQuery, [organigrama_id]);
+
+// Obtener los resultados del organigrama
+const { codigo_hijo, organigrama_id_padre } = organigramaResult.rows[0];
+
+// Consulta para obtener el codigo del padre del organigrama
+const organigramaPadreQuery = `
+  SELECT codigo as codigo_padre
+  FROM organigrama 
+  WHERE id = $1
+`;
+const organigramaPadreResult = await db.query(organigramaPadreQuery, [organigrama_id_padre]);
+
+// Obtener el codigo del padre del organigrama
+const { codigo_padre } = organigramaPadreResult.rows[0];
+
+// Identificar los tipos de documentos que no tienen un documento asociado
+const tiposSinDocumento = tiposDocumentosResult.rows.filter(tipo => !documentos.find(doc => doc.tipo_documento === tipo.id));
+
+organigrama_id = parseInt(organigrama_id);
+
+// Mapear los tipos de documentos sin documento asociado a nuevos documentos
+const nuevosDocumentos = tiposSinDocumento.map(tipo => {
+  return {
+    codigo_documento: `${tipo.siglas_codigo}-${codigo_padre}${codigo_hijo}-001`,
+    tipo_documento: tipo.tipo_documento,
+    organigrama_id,
+    codigo_hijo,
+    organigrama_id_padre,
+    codigo_padre
+  };
+});
+
+// Combinar los documentos existentes y los nuevos documentos creados
+const resultado = {
+  documentos: [...documentos, ...nuevosDocumentos]
+};
+
+
+    return resultado;
   } catch (error) {
-      console.error('Error al obtener documentos:', error);
-      throw new Error('Error al obtener documentos.');
+    console.error('Error al obtener documentos:', error);
+    throw new Error('Error al obtener documentos.');
   }
 }
+
 
 
 module.exports = { subirArchivo, listarDocumentos, updateDocumento, getDocumentoReporteGeneral, getDocumentoById, actualizarArchivo, getDocumentoByIdReporte, 
