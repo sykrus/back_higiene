@@ -434,9 +434,23 @@ const getDocumentoReporteGeneral = async (req, res) => {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
     }
-    res.json(results.rows);
+
+    // Calcular el total de documentos agrupados
+    let totalDocumentos = 0;
+    results.rows.forEach(row => {
+      totalDocumentos += row.documentos_agrupados.length;
+    });
+
+    // Agregar el total al resultado
+    const response = {
+      total_documentos: totalDocumentos,
+      documentos: results.rows
+    };
+
+    res.json(response);
   });
 };
+
 
 
 
