@@ -260,32 +260,62 @@ const updateDocumento = async (req, res) => {
 
 
 const listarDocumentosFechaRevision = async (req, res) => {
-  const rutaProyecto = __dirname;
-  try {
-    const consulta = `
-      SELECT documentos.id, organigrama.descripcion, nombre_estatus, tipo_documento, nombre_documento, codigo_documento, descripcion_documento, 
-      elaborado_por, revisado_por, aprobado_por, fecha_vigencia, fecha_elaboracion, fecha_revision, fecha_aprobacion, fecha_proxima_revision, 
-      modelo_documento, numero_revision, observacion, documento_asociado, 
-      documentos.fecha_registro, organigrama.descripcion, organigrama.codigo
-      FROM documentos
-      LEFT JOIN organigrama ON organigrama_id = organigrama.id
-      LEFT JOIN estatus ON estatus_id = estatus.id
-      LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-      WHERE fecha_revision >= CURRENT_DATE AND fecha_revision <= CURRENT_DATE + INTERVAL '7 days'
-    `;
+  const fechaHoy = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato 'YYYY-MM-DD'
 
-    const resultados = await pool.query(consulta);
+  db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
+    json_build_object(
+      'id', documentos.id,
+      'descripcion_organigrama', organigrama.descripcion,
+      'nombre_estatus', nombre_estatus,
+      'nombre_documento', nombre_documento,
+      'codigo_documento', codigo_documento,
+      'descripcion_documento', descripcion_documento,
+      'elaborado_por', elaborado_por,
+      'revisado_por', revisado_por,
+      'aprobado_por', aprobado_por,
+      'fecha_vigencia', fecha_vigencia,
+      'fecha_elaboracion', fecha_elaboracion,
+      'fecha_revision', fecha_revision,
+      'fecha_aprobacion', fecha_aprobacion,
+      'fecha_proxima_revision', fecha_proxima_revision,
+      'modelo_documento', modelo_documento,
+      'numero_revision', numero_revision,
+      'documento_asociado', documento_asociado,
+      'fecha_registro', documentos.fecha_registro,
+      'organigrama_descripcion', organigrama.descripcion,
+      'organigrama_codigo', organigrama.codigo,
+      'datos_normas', datos_normas
+    ) ORDER BY codigo_documento ASC
+  ) AS documentos_agrupados
+FROM documentos
+LEFT JOIN organigrama ON organigrama_id = organigrama.id
+LEFT JOIN estatus ON estatus_id = estatus.id
+LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+WHERE 
+    fecha_proxima_revision >= CURRENT_DATE AND 
+    fecha_proxima_revision <= CURRENT_DATE + INTERVAL '2 months';
+GROUP BY organigrama.descripcion, tipo_documento
+ORDER BY organigrama.descripcion, tipo_documento;
+`, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
+    }
 
-    const documentosConRuta = resultados.rows.map((documento) => ({
-      ...documento,
-      ruta_documento: `${rutaProyecto}/${documento.ruta_documento}`,
-    }));
+    // Calcular el total de documentos agrupados
+    let totalDocumentos = 0;
+    results.rows.forEach(row => {
+      totalDocumentos += row.documentos_agrupados.length;
+    });
 
-    res.status(200).json(documentosConRuta);
-  } catch (error) {
-    console.error('Error al obtener la lista de documentos:', error);
-    return res.status(500).json({ error: 'Error al obtener la lista de documentos' });
-  }
+    // Agregar el total al resultado
+    const response = {
+      total_documentos: totalDocumentos,
+      documentos: results.rows
+    };
+
+    res.json(response);
+  });
 };
 
 
@@ -302,6 +332,7 @@ const listarDocumentos = async (req, res) => {
       LEFT JOIN organigrama ON organigrama_id = organigrama.id
       LEFT JOIN estatus ON estatus_id = estatus.id
       LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+      ORDER BY documentos.id DESC
     `;
 
     const resultados = await pool.query(consulta);
@@ -331,6 +362,7 @@ const listarDocumentosPublicos = async (req, res) => {
       LEFT JOIN estatus ON estatus_id = estatus.id
       LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
       WHERE modelo_documento = 'publico'
+      ORDER BY documentos.id DESC
     `;
 
     const resultados = await pool.query(consulta);
@@ -428,6 +460,7 @@ FROM documentos
 LEFT JOIN organigrama ON organigrama_id = organigrama.id
 LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+WHERE documentos.estatus_id = 3
 GROUP BY organigrama.descripcion, tipo_documento
 ORDER BY organigrama.descripcion, tipo_documento;
 `, (err, results) => {
@@ -452,6 +485,51 @@ ORDER BY organigrama.descripcion, tipo_documento;
   });
 };
 
+
+
+const getDocumentoByIdReporteOrganigrama = async (req, res) => {
+  const { id } = req.params; // Obtén el valor de id desde req.params
+  db.query(`
+  SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
+    json_build_object(
+      'id', documentos.id,
+      'descripcion_organigrama', organigrama.descripcion,
+      'nombre_estatus', nombre_estatus,
+      'nombre_documento', nombre_documento,
+      'codigo_documento', codigo_documento,
+      'descripcion_documento', descripcion_documento,
+      'elaborado_por', elaborado_por,
+      'revisado_por', revisado_por,
+      'aprobado_por', aprobado_por,
+      'fecha_vigencia', fecha_vigencia,
+      'fecha_elaboracion', fecha_elaboracion,
+      'fecha_revision', fecha_revision,
+      'fecha_aprobacion', fecha_aprobacion,
+      'fecha_proxima_revision', fecha_proxima_revision,
+      'modelo_documento', modelo_documento,
+      'numero_revision', numero_revision,
+      'documento_asociado', documento_asociado,
+      'fecha_registro', documentos.fecha_registro,
+      'organigrama_descripcion', organigrama.descripcion,
+      'organigrama_codigo', organigrama.codigo,
+      'datos_normas', datos_normas
+    ) ORDER BY codigo_documento ASC
+  ) AS documentos_agrupados
+FROM documentos
+LEFT JOIN organigrama ON organigrama_id = organigrama.id
+LEFT JOIN estatus ON estatus_id = estatus.id
+LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+WHERE organigrama_id = $1 AND documentos.estatus_id = 3  
+GROUP BY organigrama.descripcion, tipo_documento
+ORDER BY organigrama.descripcion, tipo_documento
+`, [id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
+    }
+    res.json(results.rows);
+  });
+};
 
 
 
@@ -502,10 +580,36 @@ WHERE fecha_vigencia > '${fechaHoy}' `, (err, results) => {
 
 
 //REPORTE POR ORGANIGRAMA
-const getDocumentoByIdReporteOrganigrama = async (req, res) => {
-  const { id } = req.params; // Obtén el valor de id desde req.params
+
+
+
+const getDocumentoByIdReporteOrganigramaNormas = async (req, res) => {
+  const { id, datosNormas } = req.params; // Obtén el valor de id y datosNormas desde req.params
+
   db.query(`
-  SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
+  SELECT documentos.id, organigrama.descripcion, nombre_estatus, tipo_documento, nombre_documento, codigo_documento, descripcion_documento, 
+  elaborado_por, revisado_por, aprobado_por, fecha_vigencia, fecha_elaboracion, fecha_revision, fecha_aprobacion, fecha_proxima_revision, 
+  modelo_documento, numero_revision, documento_asociado,
+  documentos.fecha_registro, organigrama.descripcion, organigrama.codigo, datos_normas 
+  FROM documentos
+  LEFT JOIN organigrama ON organigrama_id = organigrama.id
+  LEFT JOIN estatus ON estatus_id = estatus.id
+  LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+  WHERE organigrama_id = $1
+  AND (datos_normas ILIKE $2)
+  ORDER BY codigo_documento`, [id, `%${datosNormas}%`], (err, results) => {
+  if (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
+  }
+  res.json(results.rows);
+});
+};
+
+const getDocumentoReporteVencidos = async (req, res) => {
+  const fechaHoy = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato 'YYYY-MM-DD'
+
+  db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
     json_build_object(
       'id', documentos.id,
       'descripcion_organigrama', organigrama.descripcion,
@@ -534,136 +638,100 @@ FROM documentos
 LEFT JOIN organigrama ON organigrama_id = organigrama.id
 LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-WHERE organigrama_id = $1 
+
 GROUP BY organigrama.descripcion, tipo_documento
-ORDER BY organigrama.descripcion, tipo_documento
-`, [id], (err, results) => {
+ORDER BY organigrama.descripcion, tipo_documento;
+`, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
     }
-    res.json(results.rows);
+
+    // Calcular el total de documentos agrupados
+    let totalDocumentos = 0;
+    results.rows.forEach(row => {
+      totalDocumentos += row.documentos_agrupados.length;
+    });
+
+    // Agregar el total al resultado
+    const response = {
+      total_documentos: totalDocumentos,
+      documentos: results.rows
+    };
+
+    res.json(response);
   });
 };
 
-
-
-const getDocumentoByIdReporteOrganigramaNormas = async (req, res) => {
-  const { id, datosNormas } = req.params; // Obtén el valor de id y datosNormas desde req.params
-
-  db.query(`
-  SELECT documentos.id, organigrama.descripcion, nombre_estatus, tipo_documento, nombre_documento, codigo_documento, descripcion_documento, 
-  elaborado_por, revisado_por, aprobado_por, fecha_vigencia, fecha_elaboracion, fecha_revision, fecha_aprobacion, fecha_proxima_revision, 
-  modelo_documento, numero_revision, documento_asociado,
-  documentos.fecha_registro, organigrama.descripcion, organigrama.codigo, datos_normas 
-  FROM documentos
-  LEFT JOIN organigrama ON organigrama_id = organigrama.id
-  LEFT JOIN estatus ON estatus_id = estatus.id
-  LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-  WHERE organigrama_id = $1
-  AND (datos_normas ILIKE $2)
-  ORDER BY codigo_documento`, [id, `%${datosNormas}%`], (err, results) => {
-  if (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
-  }
-  res.json(results.rows);
-});
-};
-
-const getDocumentoReporteVencidos = async (req, res) => {
-  try {
-    const fechaHoy = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato 'YYYY-MM-DD'
-    
-    // Query para obtener documentos vencidos
-    const query = `
-      SELECT 
-        documentos.id, 
-        organigrama.id as organigrama_id, 
-        organigrama.descripcion as organigrama_descripcion, 
-        nombre_estatus, 
-        tipo_documento, 
-        nombre_documento, 
-        codigo_documento, 
-        descripcion_documento, 
-        elaborado_por, 
-        revisado_por, 
-        aprobado_por, 
-        fecha_vigencia, 
-        fecha_elaboracion, 
-        fecha_revision, 
-        fecha_aprobacion, 
-        fecha_proxima_revision, 
-        modelo_documento, 
-        numero_revision, 
-        documento_asociado,
-        documentos.fecha_registro, 
-        organigrama.codigo, 
-        datos_normas 
-      FROM documentos
-      LEFT JOIN organigrama ON organigrama_id = organigrama.id
-      LEFT JOIN estatus ON estatus_id = estatus.id
-      LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-      WHERE fecha_proxima_revision < '${fechaHoy}';
-    `;
-
-    // Ejecutar la consulta
-    const result = await db.query(query);
-
-    // Enviar el resultado como respuesta
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener documentos vencidos:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-};
-
 const getDocumentoReporteVencidosPorOrganigrama = async (req, res) => {
-  try {
-    const organigramaId = req.params.organigramaId; // Asumiendo que recibes el organigramaId como parámetro en la URL
-    const fechaHoy = new Date().toISOString().split('T')[0];
+  const organigramaId = req.params.organigramaId; // Asumiendo que recibes el organigramaId como parámetro en la URL
+  const fechaHoy = new Date().toISOString().split('T')[0];
+  
+  db.query(`
+    SELECT 
+      tipo_documento, 
+      organigrama.descripcion AS descripcion_organigrama, 
+      ARRAY_AGG(
+        json_build_object(
+          'id', documentos.id,
+          'descripcion_organigrama', organigrama.descripcion,
+          'nombre_estatus', nombre_estatus,
+          'nombre_documento', nombre_documento,
+          'codigo_documento', codigo_documento,
+          'descripcion_documento', descripcion_documento,
+          'elaborado_por', elaborado_por,
+          'revisado_por', revisado_por,
+          'aprobado_por', aprobado_por,
+          'fecha_vigencia', fecha_vigencia,
+          'fecha_elaboracion', fecha_elaboracion,
+          'fecha_revision', fecha_revision,
+          'fecha_aprobacion', fecha_aprobacion,
+          'fecha_proxima_revision', fecha_proxima_revision,
+          'modelo_documento', modelo_documento,
+          'numero_revision', numero_revision,
+          'documento_asociado', documento_asociado,
+          'fecha_registro', documentos.fecha_registro,
+          'organigrama_descripcion', organigrama.descripcion,
+          'organigrama_codigo', organigrama.codigo,
+          'datos_normas', datos_normas
+        ) 
+        ORDER BY codigo_documento ASC
+      ) AS documentos_agrupados
+    FROM 
+      documentos
+    LEFT JOIN 
+      organigrama ON organigrama_id = organigrama.id
+    LEFT JOIN 
+      estatus ON estatus_id = estatus.id
+    LEFT JOIN 
+      tipo_documentos ON tipo_documento_id = tipo_documentos.id
+    WHERE 
+      fecha_proxima_revision < '${fechaHoy}' AND 
+      organigrama_id = ${organigramaId}
+    GROUP BY 
+      organigrama.descripcion, tipo_documento
+    ORDER BY 
+      organigrama.descripcion, tipo_documento;
+  `, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
+    }
 
-    // Query para obtener documentos vencidos filtrando por organigrama_id
-    const query = `
-      SELECT 
-        documentos.id,
-        organigrama.id as organigrama_id, 
-        organigrama.descripcion as organigrama_descripcion, 
-        nombre_estatus, 
-        tipo_documento, 
-        nombre_documento, 
-        codigo_documento, 
-        descripcion_documento, 
-        elaborado_por, 
-        revisado_por, 
-        aprobado_por, 
-        fecha_vigencia, 
-        fecha_elaboracion, 
-        fecha_revision, 
-        fecha_aprobacion, 
-        fecha_proxima_revision, 
-        modelo_documento, 
-        numero_revision, 
-        documento_asociado,
-        documentos.fecha_registro, 
-        organigrama.codigo, 
-        datos_normas 
-      FROM documentos
-      LEFT JOIN organigrama ON organigrama_id = organigrama.id
-      LEFT JOIN estatus ON estatus_id = estatus.id
-      LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-      WHERE fecha_proxima_revision < '${fechaHoy}' AND organigrama_id = ${organigramaId};
-    `;
+    // Calcular el total de documentos agrupados
+    let totalDocumentos = 0;
+    results.rows.forEach(row => {
+      totalDocumentos += row.documentos_agrupados.length;
+    });
 
-    // Ejecutar la consulta
-    const result = await db.query(query);
+    // Agregar el total al resultado
+    const response = {
+      total_documentos: totalDocumentos,
+      documentos: results.rows
+    };
 
-    // Enviar el resultado como respuesta
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener documentos vencidos por organigrama:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+    res.json(response);
+  });
 };
 
 async function obtenerDocumentosPorOrganigrama(organigrama_id) {

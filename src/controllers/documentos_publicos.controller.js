@@ -48,7 +48,7 @@ const subirArchivo = async (req, res) => {
       const nombreDocumento = archivo.originalname.replace(/ /g, '_');
 
       // Extrae los valores de los campos del formulario
-      const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, usuario_id } = req.body;
+      const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, usuario_id, numero } = req.body;
 
       // Valida que los campos tengan valores definidos o establece null si son undefined
       const rutaDocumento = path.join('uploads/publicos', nombreDocumento); // Ruta del archivo guardado en el sistema de archivos
@@ -70,8 +70,8 @@ const subirArchivo = async (req, res) => {
         // Prepara la consulta SQL con parámetros
         const insertQuery = `
           INSERT INTO documentos_publicos
-          (estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, ruta_documento, fecha_registro)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          (estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, ruta_documento, fecha_registro, numero)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         `;
 
         // Ejecuta la consulta SQL con los parámetros definidos
@@ -85,6 +85,7 @@ const subirArchivo = async (req, res) => {
           observacion || null,
           rutaDocumento || null,
           fecha_registro,
+          numero || null
         ]);
 
         res.status(200).json({ mensaje: 'Archivo subido y registrado correctamente', documento: result.rows[0] });
