@@ -132,6 +132,37 @@ const listarDocumentos = async (req, res) => {
 };
 
 
+
+const listarDocumentosPublico = async (req, res) => {
+  try {
+    // Consulta SQL para obtener la lista de documentos
+    const consulta = `
+      SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , 
+      dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
+      FROM documentos_publicos dp
+      LEFT JOIN emisores ON emisor_id = emisores.id
+      ORDER BY dp.codigo_documento DESC
+     
+    `;
+
+    // Ejecuta la consulta SQL
+    const resultados = await db.query(consulta);
+
+    // Agrega la ruta completa de acceso a cada archivo
+    const documentosConRuta = resultados.rows.map((documento) => ({
+      ...documento,
+      ruta_documento: `${__dirname}/../${documento.ruta_documento}`, // Ruta dinámica
+    }));
+
+    // Retorna la lista de documentos con las rutas de acceso
+    res.status(200).json(documentosConRuta);
+  } catch (error) {
+    console.error('Error al obtener la lista de documentos:', error);
+    return res.status(500).json({ error: 'Error al obtener la lista de documentos' });
+  }
+};
+
+
 const deleteDocumentoPublico = async (req, res) => {
   const { id } = req.params; // Obtén el ID del documento controlado que deseas eliminar desde los parámetros de la URL
 
@@ -147,4 +178,4 @@ const deleteDocumentoPublico = async (req, res) => {
 
 
 
-module.exports = { subirArchivo, listarDocumentos, deleteDocumentoPublico };
+module.exports = { subirArchivo, listarDocumentos, deleteDocumentoPublico, listarDocumentosPublico };

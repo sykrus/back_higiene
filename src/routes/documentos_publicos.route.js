@@ -7,6 +7,7 @@ const router = Router();
 
 router.post('/subir-archivo', documentosPublicosController.subirArchivo);
 router.get('/listado', documentosPublicosController.listarDocumentos);
+router.get('/listado/publico', documentosPublicosController.listarDocumentosPublico);
 router.delete('/:id', documentosPublicosController.deleteDocumentoPublico);
 
 // Configura una ruta para acceder a los archivos como una API
