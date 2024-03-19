@@ -2,7 +2,7 @@ const db = require('../database/db');
 
 // Obtener todos los registros
 exports.getAllOrganigrama = (req, res) => {
-  db.query('SELECT * FROM organigrama', (err, results) => {
+  db.query('SELECT * FROM organigrama ORDER BY descripcion ASC', (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de organigrama.' });
@@ -13,7 +13,7 @@ exports.getAllOrganigrama = (req, res) => {
 
 
 exports.getAllOrganigramaActivos = (req, res) => {
-  db.query('SELECT * FROM organigrama WHERE estado = true', (err, results) => {
+  db.query('SELECT * FROM organigrama WHERE estado = true ORDER BY descripcion ASC', (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de organigrama.' });

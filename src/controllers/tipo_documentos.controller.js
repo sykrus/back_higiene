@@ -3,7 +3,7 @@ const db = require('../database/db');
 // Obtener todos los tipos de documento
 exports.getAllTipoDocumentos = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM tipo_documentos');
+    const { rows } = await db.query('SELECT * FROM tipo_documentos order by tipo_documento ASC');
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -14,7 +14,7 @@ exports.getAllTipoDocumentos = async (req, res) => {
 // Obtener todos los tipos de documento
 exports.getAllTipoDocumentosActivos = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM tipo_documentos WHERE estado = 1');
+    const { rows } = await db.query('SELECT * FROM tipo_documentos WHERE estado = 1 order by tipo_documento ASC');
     res.json(rows);
   } catch (error) {
     console.error(error);

@@ -10,6 +10,7 @@ const router = Router();
 
 router.post('/subir-archivo', documentosController.subirArchivo);
 router.get('/listado', documentosController.listarDocumentos);
+router.get('/listado/combo', documentosController.listarDocumentosCombo);
 router.get('/listado/publicos', documentosController.listarDocumentosPublicos);
 router.get('/listado/fecha/revision', documentosController.listarDocumentosFechaRevision);
 router.get('/reportes/general', documentosController.getDocumentoReporteGeneral);

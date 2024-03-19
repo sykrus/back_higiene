@@ -349,6 +349,37 @@ const listarDocumentos = async (req, res) => {
   }
 };
 
+const listarDocumentosCombo = async (req, res) => {
+  const rutaProyecto = __dirname;
+  try {
+    const consulta = `
+      SELECT documentos.id, organigrama.descripcion, nombre_estatus, tipo_documento, nombre_documento, codigo_documento,  descripcion_documento, 
+      elaborado_por, revisado_por, aprobado_por, fecha_vigencia, fecha_elaboracion, fecha_revision, fecha_aprobacion, fecha_proxima_revision, 
+      modelo_documento,numero_revision, observacion, documento_asociado, 
+      documentos.fecha_registro, organigrama.descripcion, organigrama.codigo
+      FROM documentos
+      LEFT JOIN organigrama ON organigrama_id = organigrama.id
+      LEFT JOIN estatus ON estatus_id = estatus.id
+      LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
+      WHERE documentos.estatus_id = 3
+      ORDER BY documentos.id DESC
+    `;
+
+    const resultados = await pool.query(consulta);
+
+    const documentosConRuta = resultados.rows.map((documento) => ({
+      ...documento,
+      ruta_documento: `${rutaProyecto}/${documento.ruta_documento}`,
+    }));
+
+    res.status(200).json(documentosConRuta);
+  } catch (error) {
+    console.error('Error al obtener la lista de documentos:', error);
+    return res.status(500).json({ error: 'Error al obtener la lista de documentos' });
+  }
+};
+
+
 const listarDocumentosPublicos = async (req, res) => {
   const rutaProyecto = __dirname;
   try {
@@ -837,5 +868,5 @@ const resultado = {
 
 module.exports = { subirArchivo, listarDocumentos, updateDocumento, getDocumentoReporteGeneral, getDocumentoById, actualizarArchivo, getDocumentoByIdReporte, 
   getDocumentoByIdReporteOrganigrama, getDocumentoByIdReporteOrganigramaNormas, CapturarCodigoDocumento, getDocumentoReporteObsoletos, listarDocumentosFechaRevision, listarDocumentosPublicos, 
-  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama, obtenerDocumentosPorOrganigrama
+  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama, obtenerDocumentosPorOrganigrama, listarDocumentosCombo
 };

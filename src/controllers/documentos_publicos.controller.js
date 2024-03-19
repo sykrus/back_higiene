@@ -106,11 +106,11 @@ const listarDocumentos = async (req, res) => {
   try {
     // Consulta SQL para obtener la lista de documentos
     const consulta = `
-      SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , 
+      SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , dp.numero,
       dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
       FROM documentos_publicos dp
       LEFT JOIN emisores ON emisor_id = emisores.id
-      ORDER BY dp.codigo_documento
+      ORDER BY dp.codigo_documento DESC 
      
     `;
 
@@ -137,7 +137,7 @@ const listarDocumentosPublico = async (req, res) => {
   try {
     // Consulta SQL para obtener la lista de documentos
     const consulta = `
-      SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , 
+      SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , dp.numero, 
       dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
       FROM documentos_publicos dp
       LEFT JOIN emisores ON emisor_id = emisores.id
