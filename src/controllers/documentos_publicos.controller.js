@@ -110,7 +110,7 @@ const listarDocumentos = async (req, res) => {
       dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
       FROM documentos_publicos dp
       LEFT JOIN emisores ON emisor_id = emisores.id
-      ORDER BY dp.codigo_documento DESC 
+      ORDER BY dp.codigo_documento
      
     `;
 
