@@ -48,7 +48,7 @@ const getAllDocumentosControlados = async (req, res) => {
     const { id } = req.params;
       try {
       const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.codigo_documento, descripcion_documento, numero_revision, 
-      codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion
+      codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos.observacion, documentos.documento_asociado
         FROM  documentos_controlados
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id

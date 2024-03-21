@@ -485,6 +485,7 @@ const getDocumentoReporteGeneral = async (req, res) => {
       'organigrama_descripcion', organigrama.descripcion,
       'organigrama_codigo', organigrama.codigo,
       'datos_normas', datos_normas
+
     ) ORDER BY codigo_documento ASC
   ) AS documentos_agrupados
 FROM documentos
@@ -520,8 +521,7 @@ ORDER BY organigrama.descripcion, tipo_documento;
 
 const getDocumentoByIdReporteOrganigrama = async (req, res) => {
   const { id } = req.params; // Obtén el valor de id desde req.params
-  db.query(`
-  SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
+  db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
     json_build_object(
       'id', documentos.id,
       'descripcion_organigrama', organigrama.descripcion,
@@ -544,6 +544,7 @@ const getDocumentoByIdReporteOrganigrama = async (req, res) => {
       'organigrama_descripcion', organigrama.descripcion,
       'organigrama_codigo', organigrama.codigo,
       'datos_normas', datos_normas
+
     ) ORDER BY codigo_documento ASC
   ) AS documentos_agrupados
 FROM documentos
@@ -552,13 +553,26 @@ LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
 WHERE organigrama_id = $1 AND documentos.estatus_id = 3  
 GROUP BY organigrama.descripcion, tipo_documento
-ORDER BY organigrama.descripcion, tipo_documento
+ORDER BY organigrama.descripcion, tipo_documento;
 `, [id], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
     }
-    res.json(results.rows);
+
+    // Calcular el total de documentos agrupados
+    let totalDocumentos = 0;
+    results.rows.forEach(row => {
+      totalDocumentos += row.documentos_agrupados.length;
+    });
+
+    // Agregar el total al resultado
+    const response = {
+      total_documentos: totalDocumentos,
+      documentos: results.rows
+    };
+
+    res.json(response);
   });
 };
 
