@@ -2,18 +2,17 @@ const pool = require('../database/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// Controlador de inicio de sesión
 const login = async (req, res) => {
   // Obtenemos las credenciales del usuario desde el cuerpo de la solicitud
   const { usuario, password } = req.body;
 
   try {
-    // Consultamos la base de datos para buscar al usuario por su nombre de usuario
-    const result = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario]);
+    // Consultamos la base de datos para buscar al usuario por su nombre de usuario y estado true
+    const result = await pool.query('SELECT * FROM usuarios WHERE usuario = $1 AND estado = 1', [usuario]);
 
-    // Si no se encuentra ningún usuario con el nombre de usuario proporcionado, devolvemos un error 401
+    // Si no se encuentra ningún usuario con el nombre de usuario proporcionado o el estado no es true, devolvemos un error 401
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Usuario no encontrado' });
+      return res.status(401).json({ message: 'Usuario no encontrado o inactivo' });
     }
 
     // Obtenemos la información del usuario
@@ -40,6 +39,7 @@ const login = async (req, res) => {
     res.status(500).json({ message: 'Error en el servidor' });
   }
 };
+
 
 
 

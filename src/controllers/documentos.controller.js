@@ -260,8 +260,7 @@ const updateDocumento = async (req, res) => {
 
 
 const listarDocumentosFechaRevision = async (req, res) => {
-  const fechaHoy = new Date().toISOString().split('T')[0]; // Obtener la fecha de hoy en formato 'YYYY-MM-DD'
-
+  const { id } = req.params; // Obtén el valor de id desde req.params
   db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
     json_build_object(
       'id', documentos.id,
@@ -285,6 +284,7 @@ const listarDocumentosFechaRevision = async (req, res) => {
       'organigrama_descripcion', organigrama.descripcion,
       'organigrama_codigo', organigrama.codigo,
       'datos_normas', datos_normas
+
     ) ORDER BY codigo_documento ASC
   ) AS documentos_agrupados
 FROM documentos
@@ -296,7 +296,7 @@ WHERE
     fecha_proxima_revision <= CURRENT_DATE + INTERVAL '2 months';
 GROUP BY organigrama.descripcion, tipo_documento
 ORDER BY organigrama.descripcion, tipo_documento;
-`, (err, results) => {
+`, [id], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
