@@ -98,6 +98,27 @@ const getAllDocumentosControlados = async (req, res) => {
   };
 
 
+  const createDocumentoControladoTodos = async (req, res) => {
+    try {
+        // Ejecutar la consulta SQL
+        const result = await db.query(`
+            INSERT INTO documentos_controlados (id, documento_id)
+            SELECT id, 1 FROM public.organigrama
+        `);
+
+        // Verificar si se insertaron filas
+        if (result.rowCount > 0) {
+            res.status(200).json({ message: 'Se insertaron los documentos controlados exitosamente.' });
+        } else {
+            res.status(400).json({ message: 'No se insertaron documentos controlados.' });
+        }
+    } catch (error) {
+        console.error('Error al crear documentos controlados:', error);
+        res.status(500).json({ message: 'Ocurrió un error al crear documentos controlados.' });
+    }
+};
+
+
 
 
 // Controlador para crear un nuevo documento controlado
