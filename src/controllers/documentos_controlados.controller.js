@@ -98,25 +98,7 @@ const getAllDocumentosControlados = async (req, res) => {
   };
 
 
-  const createDocumentoControladoTodos = async (req, res) => {
-    try {
-        // Ejecutar la consulta SQL
-        const result = await db.query(`
-            INSERT INTO documentos_controlados (id, documento_id)
-            SELECT id, 1 FROM public.organigrama
-        `);
 
-        // Verificar si se insertaron filas
-        if (result.rowCount > 0) {
-            res.status(200).json({ message: 'Se insertaron los documentos controlados exitosamente.' });
-        } else {
-            res.status(400).json({ message: 'No se insertaron documentos controlados.' });
-        }
-    } catch (error) {
-        console.error('Error al crear documentos controlados:', error);
-        res.status(500).json({ message: 'Ocurrió un error al crear documentos controlados.' });
-    }
-};
 
 
 
@@ -178,6 +160,65 @@ const updateDocumentoControlado = async (req, res) => {
     }
   };
 
+  const createDocumentoControladoTodos = async (req, res) => {
+    try {
+        // Obtener el valor de documento_id de los parámetros de la solicitud
+        const documento_id = req.params.documento_id;
+
+        // Verificar si documento_id es una cadena vacía
+        if (!documento_id) {
+            return res.status(400).json({ message: 'documento_id no puede estar vacío.' });
+        }
+
+        // Obtener todos los id de organigrama
+        const organigramaIdsResult = await db.query(`SELECT id FROM public.organigrama`);
+
+        // Verificar si se encontraron ids de organigrama
+        if (organigramaIdsResult.rows.length === 0) {
+            return res.status(400).json({ message: 'No se encontraron IDs de organigrama.' });
+        }
+
+        // Iterar sobre los ids de organigrama y realizar la inserción en documentos_controlados
+        for (const row of organigramaIdsResult.rows) {
+            const organigramaId = row.id;
+
+            // Verificar si ya existe un registro para documento_id y organigrama_id en documentos_controlados
+            const existsQuery = `
+                SELECT EXISTS (
+                    SELECT 1 FROM documentos_controlados
+                    WHERE documento_id = $1 AND organigrama_id = $2
+                ) AS "exists"
+            `;
+            const existsResult = await db.query(existsQuery, [documento_id, organigramaId]);
+            const exists = existsResult.rows[0].exists;
+
+            // Si el registro ya existe, continuar con la siguiente iteración
+            if (exists) {
+                console.log(`El documento controlado para organigrama_id ${organigramaId} ya existe. Se omitirá.`);
+                continue;
+            }
+
+            // Ejecutar la consulta SQL para insertar en documentos_controlados
+            const result = await db.query(`
+                INSERT INTO documentos_controlados (id, documento_id, organigrama_id)
+                VALUES (DEFAULT, $1, $2)
+            `, [documento_id, organigramaId]);
+
+            // Verificar si se insertaron filas
+            if (result.rowCount === 0) {
+                console.error(`No se insertó el documento controlado para organigrama_id ${organigramaId}`);
+            }
+        }
+
+        // Si se completa la iteración, enviar una respuesta exitosa
+        res.status(200).json({ message: 'Se insertaron los documentos controlados exitosamente.' });
+    } catch (error) {
+        console.error('Error al crear documentos controlados:', error);
+        res.status(500).json({ message: 'Ocurrió un error al crear documentos controlados.' });
+    }
+};
+
+
 
 
   const createMultipleDocumentosControlados = async (req, res) => {
@@ -233,6 +274,7 @@ const updateDocumentoControlado = async (req, res) => {
     getControladosPorDocumentoId,
     getControladosReportesPorDocumentoId,
     deleteDocumentoControlado,
-    createMultipleDocumentosControlados 
+    createMultipleDocumentosControlados,
+    createDocumentoControladoTodos 
 
   };
