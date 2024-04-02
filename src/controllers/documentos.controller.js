@@ -4,10 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../database/db');
 
+
 // Configurar Multer para guardar los archivos en una carpeta específica
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
-    const uploadDir = 'uploads'; // Nombre de la carpeta donde se guardarán los archivos
+    const uploadDir = 'uploads/documentos'; // Nombre de la carpeta donde se guardarán los archivos
     const fullPath = path.join(__dirname, '..', uploadDir);
 
     // Crear la carpeta si no existe
@@ -52,7 +53,7 @@ const subirArchivo = async (req, res) => {
          modelo_documento,numero_revision,
          usuario_id, datos_normas, observacion, documento_asociado  } = req.body;
 
-      const rutaDocumento = path.join('uploads', nombreDocumento);
+      const rutaDocumento = path.join('uploads/documentos', nombreDocumento);
       const fecha_registro = new Date();
 
       const insertQuery = `

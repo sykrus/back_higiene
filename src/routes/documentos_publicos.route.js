@@ -1,8 +1,9 @@
-import { Router } from "express";
+const express = require('express');
+
 const documentosPublicosController = require('../controllers/documentos_publicos.controller');
 const path = require('path');
 const fs = require('fs');
-const router = Router();
+const router = express.Router();
 
 
 router.post('/subir-archivo', documentosPublicosController.subirArchivo);
@@ -23,6 +24,20 @@ router.get('/archivos/:nombreArchivo', (req, res) => {
         // Si el archivo no existe, enviar un mensaje de error
         res.status(404).send('El archivo solicitado no existe');
     }
+});
+
+
+// Configurar Express para servir archivos estáticos desde la carpeta 'publicos'
+router.use('/uploads/publicos', express.static(path.join(__dirname, '../uploads/publicos')));
+
+// Definir una ruta en tu API para acceder a los archivos en la carpeta 'publicos'
+router.get('/uploads/publicos/:fileName', (req, res) => {
+    const fileName = req.params.fileName;
+    // Puedes hacer cualquier validación adicional aquí, como comprobar si el archivo existe antes de enviarlo
+    const filePath = path.join(__dirname, '../uploads/publicos', fileName);
+    
+    // Envía el archivo como respuesta
+    res.sendFile(filePath);
 });
 
 export default router;
