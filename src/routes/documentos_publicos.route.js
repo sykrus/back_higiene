@@ -14,16 +14,26 @@ router.delete('/:id', documentosPublicosController.deleteDocumentoPublico);
 // Configura una ruta para acceder a los archivos como una API
 router.get('/archivos/:nombreArchivo', (req, res) => {
     const nombreArchivo = req.params.nombreArchivo;
-    const rutaArchivo = path.join(__dirname, '..', 'uploads/publicos', nombreArchivo);
+    const directorio = path.join(__dirname, '..', 'uploads/publicos');
 
-    // Verificar si el archivo existe
-    if (fs.existsSync(rutaArchivo)) {
-        // Envía el archivo como respuesta
-        res.sendFile(rutaArchivo);
-    } else {
-        // Si el archivo no existe, enviar un mensaje de error
-        res.status(404).send('El archivo solicitado no existe');
-    }
+    fs.readdir(directorio, (err, archivos) => {
+        if (err) {
+            return res.status(500).send('Error al leer el directorio');
+        }
+
+        // Busca un archivo que coincida con el nombreArchivo, ignorando mayúsculas/minúsculas
+        const archivoEncontrado = archivos.find(archivo => 
+            archivo.toLowerCase() === nombreArchivo.toLowerCase());
+
+        if (archivoEncontrado) {
+            // Si encuentra un archivo que coincide, envía ese archivo
+            const rutaArchivo = path.join(directorio, archivoEncontrado);
+            res.sendFile(rutaArchivo);
+        } else {
+            // Si no encuentra un archivo que coincida, envía un mensaje de error
+            res.status(404).send('El archivo solicitado no existe');
+        }
+    });
 });
 
 
