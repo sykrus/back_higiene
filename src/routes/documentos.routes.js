@@ -1,7 +1,7 @@
 import { Router } from "express";
 const documentosController = require('../controllers/documentos.controller');
 const path = require('path');
-
+const fs = require('fs');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
@@ -14,6 +14,7 @@ router.get('/listado/combo', documentosController.listarDocumentosCombo);
 router.get('/listado/publicos', documentosController.listarDocumentosPublicos);
 router.get('/listado/fecha/revision', documentosController.listarDocumentosFechaRevision);
 router.get('/reportes/general', documentosController.getDocumentoReporteGeneral);
+router.get('/reportes/general/publico', documentosController.getDocumentoReporteGeneralPublico);
 router.get('/reportes/obsoletos', documentosController.getDocumentoReporteObsoletos);
 router.get('/reportes/vencidos', documentosController.getDocumentoReporteVencidos);
 // Ruta para obtener documentos vencidos filtrando por organigrama_id
