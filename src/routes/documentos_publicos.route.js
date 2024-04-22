@@ -7,9 +7,13 @@ const router = express.Router();
 
 
 router.post('/subir-archivo', documentosPublicosController.subirArchivo);
+router.put('/actualizar-archivo/:id', documentosPublicosController.actualizarDocumentosExternos);
 router.get('/listado', documentosPublicosController.listarDocumentos);
 router.get('/listado/publico', documentosPublicosController.listarDocumentosPublico);
 router.delete('/:id', documentosPublicosController.deleteDocumentoPublico);
+// Actualizar un tipo de documento existente
+router.put('/:id', documentosPublicosController.actualizarInformacionDocumentoExterno);
+router.get('/:id', documentosPublicosController.getDocumentoById);
 
 // Configura una ruta para acceder a los archivos como una API
 router.get('/archivos/:nombreArchivo', (req, res) => {

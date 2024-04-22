@@ -48,7 +48,7 @@ const subirArchivo = async (req, res) => {
       const nombreDocumento = archivo.originalname.replace(/ /g, '_');
 
       // Extrae los valores de los campos del formulario
-      const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, usuario_id, numero } = req.body;
+      const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, usuario_id, numero, tipo_documento } = req.body;
 
       // Valida que los campos tengan valores definidos o establece null si son undefined
       const rutaDocumento = path.join('uploads/publicos', nombreDocumento); // Ruta del archivo guardado en el sistema de archivos
@@ -70,8 +70,8 @@ const subirArchivo = async (req, res) => {
         // Prepara la consulta SQL con parámetros
         const insertQuery = `
           INSERT INTO documentos_publicos
-          (estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, ruta_documento, fecha_registro, numero)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          (estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, ruta_documento, fecha_registro, numero, tipo_documento)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `;
 
         // Ejecuta la consulta SQL con los parámetros definidos
@@ -85,7 +85,8 @@ const subirArchivo = async (req, res) => {
           observacion || null,
           rutaDocumento || null,
           fecha_registro,
-          numero || null
+          numero || null,
+          tipo_documento || 'digital'
         ]);
 
         res.status(200).json({ mensaje: 'Archivo subido y registrado correctamente', documento: result.rows[0] });
@@ -107,7 +108,7 @@ const listarDocumentos = async (req, res) => {
     // Consulta SQL para obtener la lista de documentos
     const consulta = `
       SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , dp.numero,
-      dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
+      dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso, dp.tipo_documento
       FROM documentos_publicos dp
       LEFT JOIN emisores ON emisor_id = emisores.id
       ORDER BY dp.codigo_documento
@@ -138,7 +139,7 @@ const listarDocumentosPublico = async (req, res) => {
     // Consulta SQL para obtener la lista de documentos
     const consulta = `
       SELECT dp.id, dp.descripcion_documento, dp.codigo_documento , dp.numero, 
-      dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso
+      dp.nombre_documento, dp.fecha_registro, dp.ruta_documento, nombre_emisor, dp.observacion, dp.clave_accesso, dp.tipo_documento
       FROM documentos_publicos dp
       LEFT JOIN emisores ON emisor_id = emisores.id
       ORDER BY dp.codigo_documento ASC
@@ -176,6 +177,131 @@ const deleteDocumentoPublico = async (req, res) => {
   }
 };
 
+const actualizarDocumentosExternos = async (req, res) => {
+  try {
+    upload(req, res, async (err) => {
+      if (err) {
+        console.error('Error al subir el archivo:', err);
+        return res.status(400).json({ error: 'Error al subir el archivo' });
+      }
+
+      const archivo = req.file;
+      if (!archivo) {
+        console.error('No se ha proporcionado un archivo válido');
+        return res.status(400).json({ error: 'No se ha proporcionado un archivo válido' });
+      }
+
+      // Extrae el nombre original del archivo
+      const nombreDocumento = archivo.originalname.replace(/ /g, '_');
+
+      // Extrae los valores de los campos del formulario
+      const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion, usuario_id, numero, tipo_documento } = req.body;
+
+      // Define la ruta del archivo guardado en el sistema de archivos
+      const rutaDocumento = path.join('uploads/publicos', nombreDocumento);
+
+      // ID del documento a actualizar, extraído de los parámetros de la ruta
+      const { id } = req.params;
+
+      // Prepara la consulta SQL para actualizar los campos
+      const updateQuery = `
+        UPDATE documentos_publicos
+        SET estatus_id = $1, nombre_documento = $2, descripcion_documento = $3, codigo_documento = $4, emisor_id = $5, clave_accesso = $6, observacion = $7, ruta_documento = $8, numero = $9, tipo_documento = $10
+        WHERE id = $11
+      `;
+
+      // Ejecuta la consulta SQL con los parámetros definidos
+      await db.query(updateQuery, [
+        estatus_id || null,
+        nombreDocumento || null,
+        descripcion_documento || null,
+        codigo_documento || null,
+        emisor_id || null,
+        clave_accesso || null,
+        observacion || null,
+        rutaDocumento || null,
+        numero || null,
+        tipo_documento || 'digital',
+        id  // ID del documento a actualizar
+      ]);
+
+      res.status(200).json({ mensaje: 'Documento actualizado correctamente' });
+    });
+  } catch (error) {
+    console.error('Error en la actualización del documento:', error);
+    return res.status(500).json({ error: 'Error en la actualización del documento' });
+  }
+};
 
 
-module.exports = { subirArchivo, listarDocumentos, deleteDocumentoPublico, listarDocumentosPublico };
+const actualizarInformacionDocumentoExterno = async (req, res) => {
+  const { id } = req.params;
+  const { estatus_id, nombre_documento, descripcion_documento, codigo_documento, emisor_id, clave_accesso, observacion,  ruta_documento, numero, tipo_documento } = req.body;  
+  const sql = `
+  UPDATE documentos_publicos 
+  SET
+    estatus_id = $1,
+    nombre_documento = $2,
+    descripcion_documento = $3,
+    codigo_documento = $4,
+    emisor_id = $5,
+    clave_accesso = $6,
+    observacion = $7,
+    ruta_documento = $8,
+    numero = $9,
+    tipo_documento = $10
+  WHERE id = $11
+
+  RETURNING id
+`;
+
+  try {
+    const { rowCount } = await db.query(sql, [
+      estatus_id,
+      nombre_documento,
+      descripcion_documento,
+      codigo_documento,
+      emisor_id,
+      clave_accesso,
+      observacion,
+      ruta_documento,
+      numero,
+      tipo_documento,
+      id
+    
+    ]);
+    if (rowCount === 1) {
+      res.json({ message: 'Estatus Actualizado con éxito.' });
+    } else {
+      res.status(500).json({ message: 'Error al actualizar el documento.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar el documento.' });
+  }
+};
+
+const getDocumentoById = async (req, res) => {
+  const { id } = req.params;
+  const sql = `SELECT * 
+  FROM public.documentos_publicos 
+  WHERE id = $1`;
+
+  try {
+    const { rows } = await db.query(sql, [id]);
+    if (rows.length === 0) {
+      res.status(404).json({ message: 'Documento no encontrado.' });
+    } else {
+      res.json(rows[0]);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el Documento por ID.' });
+  }
+};
+
+
+
+
+
+module.exports = { subirArchivo, listarDocumentos, deleteDocumentoPublico, listarDocumentosPublico, actualizarDocumentosExternos, actualizarInformacionDocumentoExterno, getDocumentoById };
