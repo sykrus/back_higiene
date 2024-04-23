@@ -261,7 +261,7 @@ const updateDocumento = async (req, res) => {
 
 
 const listarDocumentosFechaRevision = async (req, res) => {
-  const { id } = req.params; // Obtén el valor de id desde req.params
+  // Realiza la consulta a la base de datos sin pasar ningún parámetro
   db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
     json_build_object(
       'id', documentos.id,
@@ -285,8 +285,7 @@ const listarDocumentosFechaRevision = async (req, res) => {
       'organigrama_descripcion', organigrama.descripcion,
       'organigrama_codigo', organigrama.codigo,
       'datos_normas', datos_normas
-
-    ) ORDER BY codigo_documento ASC
+    )
   ) AS documentos_agrupados
 FROM documentos
 LEFT JOIN organigrama ON organigrama_id = organigrama.id
@@ -294,10 +293,9 @@ LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
 WHERE 
     fecha_proxima_revision >= CURRENT_DATE AND 
-    fecha_proxima_revision <= CURRENT_DATE + INTERVAL '2 months';
+    fecha_proxima_revision <= CURRENT_DATE + INTERVAL '2 months'
 GROUP BY organigrama.descripcion, tipo_documento
-ORDER BY organigrama.descripcion, tipo_documento;
-`, [id], (err, results) => {
+ORDER BY organigrama.descripcion, tipo_documento;`, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });
@@ -318,6 +316,7 @@ ORDER BY organigrama.descripcion, tipo_documento;
     res.json(response);
   });
 };
+
 
 
 
