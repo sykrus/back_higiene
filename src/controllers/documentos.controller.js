@@ -3,6 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const db = require('../database/db');
+const moment = require('moment'); // Requiere moment
 
 
 // Configurar Multer para guardar los archivos en una carpeta específica
@@ -340,6 +341,13 @@ const listarDocumentos = async (req, res) => {
     const documentosConRuta = resultados.rows.map((documento) => ({
       ...documento,
       ruta_documento: `${rutaProyecto}/${documento.ruta_documento}`,
+      fecha_vigencia: moment(documento.fecha_vigencia).format('YYYY-MM-DD'),
+      fecha_elaboracion: moment(documento.fecha_elaboracion).format('YYYY-MM-DD'),
+      fecha_revision: moment(documento.fecha_revision).format('YYYY-MM-DD'),
+      fecha_aprobacion: moment(documento.fecha_aprobacion).format('YYYY-MM-DD'),
+      fecha_registro: moment(documento.fecha_registro).format('YYYY-MM-DD'),
+      fecha_proxima_revision: moment(documento.fecha_proxima_revision).format('YYYY-MM-DD'),
+      
     }));
 
     res.status(200).json(documentosConRuta);
