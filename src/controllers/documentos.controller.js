@@ -57,7 +57,23 @@ const subirArchivo = async (req, res) => {
       const rutaDocumento = path.join('uploads/documentos', nombreDocumento);
       const fecha_registro = new Date();
 
-      const insertQuery = `
+
+      const codigoExistenteQuery = `
+      SELECT COUNT(*) as count FROM documentos WHERE codigo_documento = $1
+    `;
+ 
+
+      try {
+
+        const codigoExistenteResult = await db.query(codigoExistenteQuery, [codigo_documento]);
+        const codigoExistente = codigoExistenteResult.rows[0].count > 0;
+
+        if (codigoExistente) {
+          return res.status(401).json({ mensaje: 'Ya existe un documento con el mismo código' });
+        }
+
+
+        const insertQuery = `
         INSERT INTO documentos 
         (organigrama_id, tipo_documento_id, estatus_id, nombre_documento,descripcion_documento, codigo_documento, 
           elaborado_por, revisado_por, aprobado_por, fecha_vigencia, fecha_elaboracion, fecha_revision, fecha_aprobacion, fecha_proxima_revision, modelo_documento,numero_revision,    
@@ -66,7 +82,6 @@ const subirArchivo = async (req, res) => {
         RETURNING id
       `;
 
-      try {
         const result = await pool.query(insertQuery, [
           organigrama_id || null,
           tipo_documento_id || null,
