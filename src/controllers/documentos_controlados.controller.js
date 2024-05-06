@@ -48,7 +48,7 @@ const getAllDocumentosControlados = async (req, res) => {
     const { id } = req.params;
       try {
       const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.codigo_documento, descripcion_documento, numero_revision, 
-      codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion, documentos.documento_asociado
+      codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion, documentos.documento_asociado, documentos_controlados.mantenimiento_id
         FROM  documentos_controlados
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
@@ -75,7 +75,7 @@ const getAllDocumentosControlados = async (req, res) => {
 
   const createDocumentoControlado = async (req, res) => {
     try {
-      const { organigrama_id,  documento_id, observacion  } = req.body;
+      const { organigrama_id,  documento_id, observacion, mantenimiento_id  } = req.body;
   
         // Verificar si los valores ya existen en la tabla
         const checkQuery = 'SELECT * FROM documentos_controlados WHERE documento_id = $1 AND organigrama_id = $2';
@@ -87,8 +87,8 @@ const getAllDocumentosControlados = async (req, res) => {
         }
   
         // Si no existen, realizar la inserción
-        const insertQuery = 'INSERT INTO documentos_controlados (documento_id, organigrama_id, observacion ) VALUES ($1, $2, $3 ) RETURNING *';
-        const result = await db.query(insertQuery, [documento_id, organigrama_id, observacion]);
+        const insertQuery = 'INSERT INTO documentos_controlados (documento_id, organigrama_id, observacion, mantenimiento_id ) VALUES ($1, $2, $3, $4 ) RETURNING *';
+        const result = await db.query(insertQuery, [documento_id, organigrama_id, observacion, mantenimiento_id]);
   
         res.status(201).json(result.rows[0]);
     } catch (error) {

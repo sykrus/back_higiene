@@ -15,6 +15,9 @@ exports.getAllAntecedentesMaestra = (req, res) => {
   });
 };
 
+
+
+
 // Crear un nuevo registro de antecendetes 
 exports.createAntecedentesMaestra = (req, res) => {
   const { codigo, asociado_revision,fecha_vigencia_ant,fecha_revision_ant, codigo_formulario ,fecha_formulario , titulo_lista_general, titulo_lista_unidad, titulo_lista_norma, revision } = req.body;
@@ -92,6 +95,7 @@ exports.getAntecedentesMaestraReportesById = async (req, res) => {
 exports.getAllAntecedentesControlados= (req, res) => {
     db.query(`SELECT  antecedentes_controlados.id, antecedentes_controlados.nro_registro, asociado,revision, fecha_vigencia_ant,fecha_revision_ant, fecha_formulario, codigo_formulario
     FROM public.antecedentes_controlados
+    ORDER BY id DESC
  
     
     `, (err, results) => {
@@ -135,7 +139,7 @@ exports.getAllAntecedentesControlados= (req, res) => {
   
   exports.getAntecedentesControladosById = async (req, res) => {
     const { id } = req.params;
-    const sql = 'SELECT * FROM public.antecedentes_controlados   WHERE id = $1';
+    const sql = 'SELECT * FROM public.antecedentes_controlados   WHERE id = $1 ORDER BY id ASC LIMIT 1 ';
   
     try {
       const { rows } = await db.query(sql, [id]);
@@ -167,4 +171,20 @@ exports.getAllAntecedentesControlados= (req, res) => {
       console.error(error);
       res.status(500).json({ message: 'Error al obtener el antecendetes  por ID.' });
     }
+  };
+
+
+  exports.UltimoIdAntecedenteControlados = (req, res) => {
+    db.query(`SELECT *
+    FROM public.antecedentes_controlados
+    ORDER BY id DESC
+    LIMIT 1;
+      
+          `, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Error al obtener los registros de antecendetes Controlados .' });
+      }
+      res.json(results.rows);
+    });
   };

@@ -10,6 +10,8 @@ const router = Router();
 //ROUTER DE ANTECEDENTES DE LISTA MAESTRA //
 router.get('/maestra', antecedentesController.getAllAntecedentesMaestra);
 
+
+
 router.get('/maestra/:id', antecedentesController.getAntecedentesMaestraById);
 
 router.get('/maestra/unidad/:id', antecedentesController.getAntecedentesMaestraReportesById);
@@ -27,6 +29,7 @@ router.put('/maestra/:id', antecedentesController.updateAntecedentesMaestra);
 //ROUTER DE ANTECEDENTES DE LISTA CONTROLADOS //
 router.get('/controlados', antecedentesController.getAllAntecedentesControlados);
 
+router.get('/controlados/ultimoid', antecedentesController.UltimoIdAntecedenteControlados);
 router.get('/controlados/:id', antecedentesController.getAntecedentesControladosById);
 
 router.get('/controlados/documento', antecedentesController.getAntecedentesControladosReportesById);
