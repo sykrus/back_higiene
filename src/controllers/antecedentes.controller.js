@@ -109,9 +109,9 @@ exports.getAllAntecedentesControlados= (req, res) => {
   
   // Crear un nuevo registro de antecendetes 
     exports.createAntecedentesControlados= (req, res) => {
-    const { nro_registro , asociado, revision  ,fecha_vigencia_ant,fecha_revision_ant } = req.body;
-    const sql = 'INSERT INTO public.antecedentes_controlados   (nro_registro , asociado , revision, fecha_vigencia_ant, fecha_revision_ant   ) VALUES ($1, $2, $3, $4,$5)';
-    db.query(sql, [nro_registro , asociado , revision,fecha_vigencia_ant,fecha_revision_ant], (err, result) => {
+    const { nro_registro , asociado, revision  ,fecha_vigencia_ant,fecha_revision_ant, codigo_formulario, fecha_formulario } = req.body;
+    const sql = 'INSERT INTO public.antecedentes_controlados   (nro_registro , asociado , revision, fecha_vigencia_ant, fecha_revision_ant, codigo_formulario, fecha_formulario   ) VALUES ($1, $2, $3, $4,$5, $6, $7)';
+    db.query(sql, [nro_registro , asociado , revision,fecha_vigencia_ant,fecha_revision_ant, codigo_formulario, fecha_formulario ], (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ message: 'Error al crear un nuevo registro de antecendetes .' });

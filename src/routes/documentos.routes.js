@@ -23,7 +23,7 @@ router.get('/reportes/vencidos/:organigramaId', documentosController.getDocument
 router.get('/:id', documentosController.getDocumentoById);
 router.get('/reporte/:id', documentosController.getDocumentoByIdReporte);
 router.get('/reporte/organigrama/:id', documentosController.getDocumentoByIdReporteOrganigrama);
-router.get('/reporte/organigrama/:id/:datosNormas', documentosController.getDocumentoByIdReporteOrganigramaNormas);
+router.get('/reporte/normas/:datosNormas', documentosController.getDocumentoByIdReporteOrganigramaNormas);
 router.get('/codigo/:tipoDocumentoId/:organigramaId', documentosController.CapturarCodigoDocumento);
 
 
