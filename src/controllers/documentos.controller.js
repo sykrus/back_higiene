@@ -721,7 +721,7 @@ WHERE fecha_vigencia > '${fechaHoy}' `, (err, results) => {
 
 
 const getDocumentoByIdReporteOrganigramaNormas = async (req, res) => {
-  const { id } = req.params; // Obtén el valor de id desde req.params
+  const { datosNormas } = req.params; // Obtén el valor de id desde req.params
   db.query(`SELECT tipo_documento, organigrama.descripcion AS descripcion_organigrama, ARRAY_AGG(
     json_build_object(
       'id', documentos.id,
@@ -745,17 +745,16 @@ const getDocumentoByIdReporteOrganigramaNormas = async (req, res) => {
       'organigrama_descripcion', organigrama.descripcion,
       'organigrama_codigo', organigrama.codigo,
       'datos_normas', datos_normas
-
     ) ORDER BY codigo_documento ASC
   ) AS documentos_agrupados
 FROM documentos
 LEFT JOIN organigrama ON organigrama_id = organigrama.id
 LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-WHERE datos_normas = $1 AND documentos.estatus_id = 3  
+WHERE datos_normas ILIKE $1 
 GROUP BY organigrama.descripcion, tipo_documento
 ORDER BY organigrama.descripcion, tipo_documento;
-`, [id], (err, results) => {
+`, [`%${datosNormas}%`], (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al obtener los registros de Documentos.' });

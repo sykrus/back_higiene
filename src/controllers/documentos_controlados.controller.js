@@ -21,13 +21,21 @@ const getAllDocumentosControlados = async (req, res) => {
     }
   };
 
-
   const getControladosPorDocumentoId = async (req, res) => {
     const { id } = req.params;
-      try {
-      const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.id as id_documento,  descripcion_documento, codigo_documento, fecha_revision, numero_revision, 
-        organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion
-        FROM  documentos_controlados 
+    try {
+      const { rows } = await db.query(`
+        SELECT 
+          documentos_controlados.id, 
+          documentos.id as id_documento,  
+          descripcion_documento, 
+          codigo_documento, 
+          TO_CHAR(fecha_revision, 'YYYY-MM-DD') as fecha_revision, 
+          numero_revision, 
+          organigrama.codigo, 
+          organigrama.descripcion, 
+          documentos_controlados.observacion
+        FROM documentos_controlados 
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
         WHERE documento_id = $1`, [id]);
@@ -42,7 +50,7 @@ const getAllDocumentosControlados = async (req, res) => {
       res.status(500).json({ message: 'Error al obtener los documentos controlados.' });
     }
   };
-
+  
 
   const getControladosReportesPorDocumentoId = async (req, res) => {
     const { id } = req.params;
