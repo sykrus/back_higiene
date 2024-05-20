@@ -29,7 +29,9 @@ exports.getAllOrganigramaActivos = (req, res) => {
 exports.getAllOrganigramaPadre = (req, res) => {
   db.query(`SELECT o.id,  o.codigo, o.descripcion, p.descripcion AS descripcion_padre, o.estado
             FROM organigrama AS o
-            INNER JOIN organigrama AS p ON o.padre = p.id;
+            LEFT JOIN organigrama AS p ON o.padre = p.id
+            ORDER BY O.descripcion ASC
+
             `
   , (err, results) => {
     if (err) {
