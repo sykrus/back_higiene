@@ -10,6 +10,6 @@ router.get('/documentos/:id', documentosControladosController.getControladosPorD
 router.get('/reporte/:id', documentosControladosController.getControladosReportesPorDocumentoId); // Ruta para obtener por ID
 router.delete('/documentos/:id', documentosControladosController.deleteDocumentoControlado);
 router.post('/multiple/:documento_id', documentosControladosController.createMultipleDocumentosControlados);
-router.post('/todos/:documento_id', documentosControladosController.createDocumentoControladoTodos);
+router.post('/todos/:documento_id/:mantenimiento_id', documentosControladosController.createDocumentoControladoTodos);
 
 module.exports = router;

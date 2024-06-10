@@ -34,11 +34,14 @@ const getAllDocumentosControlados = async (req, res) => {
           numero_revision, 
           organigrama.codigo, 
           organigrama.descripcion, 
-          documentos_controlados.observacion
+          documentos_controlados.observacion,
+          antecedentes_controlados.fecha_revision_ant,
+          antecedentes_controlados.fecha_vigencia_ant
         FROM documentos_controlados 
-        LEFT JOIN documentos ON documento_id = documentos.id
+        LEFT JOIN documentos ON documentos_controlados.documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
-        WHERE documento_id = $1`, [id]);
+        LEFT JOIN antecedentes_controlados ON documentos_controlados.mantenimiento_id = antecedentes_controlados.id
+        WHERE documentos_controlados.documento_id = $1`, [id]);
   
       if (rows.length === 0) {
         return res.status(404).json({ message: 'No se encontraron documentos controlados para el documento_id proporcionado.' });
@@ -86,8 +89,8 @@ const getAllDocumentosControlados = async (req, res) => {
       const { organigrama_id,  documento_id, observacion, mantenimiento_id  } = req.body;
   
         // Verificar si los valores ya existen en la tabla
-        const checkQuery = 'SELECT * FROM documentos_controlados WHERE documento_id = $1 AND organigrama_id = $2';
-        const checkResult = await db.query(checkQuery, [documento_id, organigrama_id]);
+        const checkQuery = 'SELECT * FROM documentos_controlados WHERE documento_id = $1 AND organigrama_id = $2 AND mantenimiento_id = $3';
+        const checkResult = await db.query(checkQuery, [documento_id, organigrama_id, mantenimiento_id]);
   
         if (checkResult.rows.length > 0) {
             // Si ya existe, enviar una respuesta indicando el error
@@ -171,11 +174,16 @@ const updateDocumentoControlado = async (req, res) => {
   const createDocumentoControladoTodos = async (req, res) => {
     try {
         // Obtener el valor de documento_id de los parámetros de la solicitud
-        const documento_id = req.params.documento_id;
+        const { documento_id, mantenimiento_id } = req.params;
 
         // Verificar si documento_id es una cadena vacía
         if (!documento_id) {
             return res.status(400).json({ message: 'documento_id no puede estar vacío.' });
+        }
+
+           // Verificar si mantenimiento_id es una cadena vacía
+           if (!mantenimiento_id) {
+            return res.status(400).json({ message: 'mantenimiento_id no puede estar vacío.' });
         }
 
         // Obtener todos los id de organigrama
@@ -208,9 +216,9 @@ const updateDocumentoControlado = async (req, res) => {
 
             // Ejecutar la consulta SQL para insertar en documentos_controlados
             const result = await db.query(`
-                INSERT INTO documentos_controlados (id, documento_id, organigrama_id)
-                VALUES (DEFAULT, $1, $2)
-            `, [documento_id, organigramaId]);
+              INSERT INTO documentos_controlados (id, documento_id, organigrama_id, mantenimiento_id)
+              VALUES (DEFAULT, $1, $2, $3)
+          `, [documento_id, organigramaId, mantenimiento_id]);
 
             // Verificar si se insertaron filas
             if (result.rowCount === 0) {
