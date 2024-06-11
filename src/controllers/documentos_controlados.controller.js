@@ -79,6 +79,45 @@ const getAllDocumentosControlados = async (req, res) => {
   };
 
 
+  const getControladosReportesPorDocumentoAscedentesAntecedenteId = async (req, res) => {
+    const { id } = req.params;
+      try {
+      const { rows } = await db.query(` SELECT 
+        documentos_controlados.id, 
+        documentos_controlados.mantenimiento_id,
+        antecedentes_controlados.fecha_revision_ant,
+        antecedentes_controlados.fecha_vigencia_ant,
+        antecedentes_controlados.asociado,
+        antecedentes_controlados.nro_registro,
+        antecedentes_controlados.revision,
+        antecedentes_controlados.codigo_formulario,
+        antecedentes_controlados.fecha_formulario
+
+      FROM 
+        documentos_controlados
+      LEFT JOIN 
+        documentos ON documentos_controlados.documento_id = documentos.id
+      LEFT JOIN 
+        organigrama ON documentos_controlados.organigrama_id = organigrama.id
+      LEFT JOIN 
+        antecedentes_controlados ON documentos_controlados.mantenimiento_id = antecedentes_controlados.id
+      WHERE 
+        documentos_controlados.documento_id = $1
+      ORDER BY 
+        documentos_controlados.id DESC
+        LIMIT 1
+`, [id]);
+  
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron documentos controlados para el documento_id proporcionado.' });
+      }
+  
+      res.json(rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al obtener los documentos controlados.' });
+    }
+  };
 
 
 
@@ -291,6 +330,7 @@ const updateDocumentoControlado = async (req, res) => {
     getControladosReportesPorDocumentoId,
     deleteDocumentoControlado,
     createMultipleDocumentosControlados,
-    createDocumentoControladoTodos 
+    createDocumentoControladoTodos,
+    getControladosReportesPorDocumentoAscedentesAntecedenteId 
 
   };

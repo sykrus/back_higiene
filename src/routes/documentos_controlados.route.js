@@ -8,6 +8,7 @@ router.put('/:id', documentosControladosController.updateDocumentoControlado); /
 router.get('/:id', documentosControladosController.getDocumentoControladoById); // Ruta para obtener por ID
 router.get('/documentos/:id', documentosControladosController.getControladosPorDocumentoId); // Ruta para obtener por ID
 router.get('/reporte/:id', documentosControladosController.getControladosReportesPorDocumentoId); // Ruta para obtener por ID
+router.get('/reporte/antecedente/:id', documentosControladosController.getControladosReportesPorDocumentoAscedentesAntecedenteId); // Ruta para obtener por ID
 router.delete('/documentos/:id', documentosControladosController.deleteDocumentoControlado);
 router.post('/multiple/:documento_id', documentosControladosController.createMultipleDocumentosControlados);
 router.post('/todos/:documento_id/:mantenimiento_id', documentosControladosController.createDocumentoControladoTodos);
