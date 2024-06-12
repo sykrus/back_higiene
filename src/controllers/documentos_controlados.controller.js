@@ -26,7 +26,8 @@ const getAllDocumentosControlados = async (req, res) => {
     try {
       const { rows } = await db.query(`
         SELECT 
-          documentos_controlados.id, 
+          documentos_controlados.id,
+          documentos_controlados.mantenimiento_id, 
           documentos.id as id_documento,  
           descripcion_documento, 
           codigo_documento, 
@@ -56,16 +57,16 @@ const getAllDocumentosControlados = async (req, res) => {
   
 
   const getControladosReportesPorDocumentoId = async (req, res) => {
-    const { id } = req.params;
+    const { id, mantenimiento_id } = req.params;
       try {
       const { rows } = await db.query(`SELECT  documentos_controlados.id, documentos.codigo_documento, descripcion_documento, numero_revision, 
       codigo_documento,  organigrama.codigo, organigrama.descripcion, documentos_controlados.observacion, documentos.documento_asociado, documentos_controlados.mantenimiento_id
         FROM  documentos_controlados
         LEFT JOIN documentos ON documento_id = documentos.id
         LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
-        WHERE documento_id = $1
+        WHERE documento_id = $1 AND documentos_controlados.mantenimiento_id = $2
         ORDER BY documentos_controlados.id
-`, [id]);
+`, [id, mantenimiento_id]);
   
       if (rows.length === 0) {
         return res.status(404).json({ message: 'No se encontraron documentos controlados para el documento_id proporcionado.' });
@@ -81,43 +82,51 @@ const getAllDocumentosControlados = async (req, res) => {
 
   const getControladosReportesPorDocumentoAscedentesAntecedenteId = async (req, res) => {
     const { id } = req.params;
-      try {
-      const { rows } = await db.query(` SELECT 
-        documentos_controlados.id, 
-        documentos_controlados.mantenimiento_id,
-        antecedentes_controlados.fecha_revision_ant,
-        antecedentes_controlados.fecha_vigencia_ant,
-        antecedentes_controlados.asociado,
-        antecedentes_controlados.nro_registro,
-        antecedentes_controlados.revision,
-        antecedentes_controlados.codigo_formulario,
-        antecedentes_controlados.fecha_formulario
 
-      FROM 
-        documentos_controlados
-      LEFT JOIN 
-        documentos ON documentos_controlados.documento_id = documentos.id
-      LEFT JOIN 
-        organigrama ON documentos_controlados.organigrama_id = organigrama.id
-      LEFT JOIN 
-        antecedentes_controlados ON documentos_controlados.mantenimiento_id = antecedentes_controlados.id
-      WHERE 
-        documentos_controlados.documento_id = $1
-      ORDER BY 
-        documentos_controlados.id DESC
-        LIMIT 1
-`, [id]);
-  
-      if (rows.length === 0) {
-        return res.status(404).json({ message: 'No se encontraron documentos controlados para el documento_id proporcionado.' });
-      }
-  
-      res.json(rows);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error al obtener los documentos controlados.' });
+    // Verificar que el id es un número entero
+    const documentoId = parseInt(id, 10);
+    if (isNaN(documentoId)) {
+        return res.status(400).json({ message: 'El ID proporcionado no es válido.' });
     }
-  };
+
+    try {
+        const { rows } = await db.query(`
+            SELECT 
+                documentos_controlados.id, 
+                documentos_controlados.mantenimiento_id,
+                antecedentes_controlados.fecha_revision_ant,
+                antecedentes_controlados.fecha_vigencia_ant,
+                antecedentes_controlados.asociado,
+                antecedentes_controlados.nro_registro,
+                antecedentes_controlados.revision,
+                antecedentes_controlados.codigo_formulario,
+                antecedentes_controlados.fecha_formulario
+            FROM 
+                documentos_controlados
+            LEFT JOIN 
+                documentos ON documentos_controlados.documento_id = documentos.id
+            LEFT JOIN 
+                organigrama ON documentos_controlados.organigrama_id = organigrama.id
+            LEFT JOIN 
+                antecedentes_controlados ON documentos_controlados.mantenimiento_id = antecedentes_controlados.id
+            WHERE 
+                documentos_controlados.documento_id = $1
+            ORDER BY 
+                documentos_controlados.id DESC
+            LIMIT 1
+        `, [documentoId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron documentos controlados para el documento_id proporcionado.' });
+        }
+
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los documentos controlados.' });
+    }
+};
+
 
 
 
