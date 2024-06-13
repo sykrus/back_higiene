@@ -3,14 +3,29 @@ const db = require('../database/db');
 // Controlador para obtener todos los documentos controlados
 const getAllDocumentosControlados = async (req, res) => {
     try {
-      const query = `SELECT MAX(documentos_controlados.id) as id,
-      documentos.id as id_documento,
-      MAX(descripcion_documento) as descripcion_documento,
-      codigo_documento
-      FROM documentos_controlados
-      LEFT JOIN documentos ON documento_id = documentos.id
-      LEFT JOIN organigrama ON documentos_controlados.organigrama_id = organigrama.id
-      GROUP BY documentos.id, codigo_documento
+      const query = `
+      SELECT 
+    MAX(documentos_controlados.id) AS id,
+    documentos.id AS id_documento,
+    MAX(descripcion_documento) AS descripcion_documento,
+    codigo_documento,
+    documentos_controlados.mantenimiento_id,
+    MAX(antecedentes_controlados.fecha_revision_ant) AS fecha_revision_ant,
+    MAX(antecedentes_controlados.fecha_vigencia_ant) AS fecha_vigencia_ant
+FROM 
+    documentos_controlados
+LEFT JOIN 
+    documentos ON documento_id = documentos.id
+LEFT JOIN 
+    organigrama ON documentos_controlados.organigrama_id = organigrama.id
+LEFT JOIN 
+    antecedentes_controlados ON documentos_controlados.mantenimiento_id = antecedentes_controlados.id
+GROUP BY 
+    documentos.id, 
+    codigo_documento,
+    documentos_controlados.mantenimiento_id;
+
+
       `
       ;
       const result = await db.query(query);
