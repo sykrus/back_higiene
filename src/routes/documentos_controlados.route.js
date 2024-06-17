@@ -10,6 +10,7 @@ router.get('/documentos/:id', documentosControladosController.getControladosPorD
 router.get('/reporte/:id/:mantenimiento_id', documentosControladosController.getControladosReportesPorDocumentoId); // Ruta para obtener por ID
 router.get('/reporte/antecedente/:id', documentosControladosController.getControladosReportesPorDocumentoAscedentesAntecedenteId); // Ruta para obtener por ID
 router.delete('/documentos/:id', documentosControladosController.deleteDocumentoControlado);
+router.delete('/documentos/eliminar/todos/:id', documentosControladosController.deleteDocumentoControladosTodos);
 router.post('/multiple/:documento_id', documentosControladosController.createMultipleDocumentosControlados);
 router.post('/todos/:documento_id/:mantenimiento_id', documentosControladosController.createDocumentoControladoTodos);
 

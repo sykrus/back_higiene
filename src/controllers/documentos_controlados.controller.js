@@ -234,6 +234,19 @@ const updateDocumentoControlado = async (req, res) => {
     }
   };
 
+  const deleteDocumentoControladosTodos = async (req, res) => {
+    const { id } = req.params; // Obtén el ID del documento controlado que deseas eliminar desde los parámetros de la URL
+  
+    try {
+      const query = `DELETE FROM documentos_controlados WHERE documento_id = $1`;
+      await db.query(query, [id]);
+      res.json({ message: 'Documento controlado eliminado con éxito' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al eliminar el documento controlado' });
+    }
+  };
+
   const createDocumentoControladoTodos = async (req, res) => {
     try {
         // Obtener el valor de documento_id de los parámetros de la solicitud
@@ -355,6 +368,7 @@ const updateDocumentoControlado = async (req, res) => {
     deleteDocumentoControlado,
     createMultipleDocumentosControlados,
     createDocumentoControladoTodos,
-    getControladosReportesPorDocumentoAscedentesAntecedenteId 
+    getControladosReportesPorDocumentoAscedentesAntecedenteId,
+    deleteDocumentoControladosTodos 
 
   };
