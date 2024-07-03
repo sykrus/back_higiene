@@ -34,9 +34,9 @@ exports.createAntecedentesMaestra = (req, res) => {
 // Actualizar un registro de antecendetes  existente
 exports.updateAntecedentesMaestra = (req, res) => {
   const { id } = req.params;
-  const { codigo, asociado_revision,fecha_vigencia_ant,fecha_revision_ant, codigo_formulario ,fecha_formulario , titulo_lista_general, titulo_lista_unidad, titulo_lista_norma, revision } = req.body;
-  const sql = 'UPDATE public.antecedentes_maestra  SET codigo =$1, asociado_revision=$2, fecha_vigencia_ant =$3, fecha_revision_ant =$4, codigo_formulario =$5, fecha_formulario =$6, titulo_lista_general =$7, titulo_lista_unidad =$8, titulo_lista_norma =$9, revision=$10  WHERE id=$11';
-  db.query(sql, [codigo, asociado_revision,fecha_vigencia_ant,fecha_revision_ant,codigo_formulario ,fecha_formulario , titulo_lista_general, titulo_lista_unidad, titulo_lista_norma,revision, id], (err, result) => {
+  const { codigo, asociado_revision,fecha_vigencia_ant,fecha_revision_ant, codigo_formulario ,fecha_formulario , titulo_lista_general, titulo_lista_unidad, titulo_lista_norma, revision, tipo_reporte } = req.body;
+  const sql = 'UPDATE public.antecedentes_maestra  SET codigo =$1, asociado_revision=$2, fecha_vigencia_ant =$3, fecha_revision_ant =$4, codigo_formulario =$5, fecha_formulario =$6, titulo_lista_general =$7, titulo_lista_unidad =$8, titulo_lista_norma =$9, revision=$10, tipo_reporte=$11  WHERE id=$12';
+  db.query(sql, [codigo, asociado_revision,fecha_vigencia_ant,fecha_revision_ant,codigo_formulario ,fecha_formulario , titulo_lista_general, titulo_lista_unidad, titulo_lista_norma,revision,tipo_reporte, id], (err, result) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: 'Error al actualizar el registro de antecendetes .' });
@@ -63,6 +63,26 @@ exports.getAntecedentesMaestraById = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener el antecendetes  por ID.' });
   }
 };
+
+
+exports.getAntecedentesMaestraTipoReporte = async (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM public.antecedentes_maestra  WHERE tipo_reporte = $1';
+
+  try {
+    const { rows } = await db.query(sql, [id]);
+    if (rows.length === 0) {
+      res.status(404).json({ message: 'antecendetes  no encontrado.' });
+    } else {
+      res.json(rows[0]);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el antecendetes  por ID.' });
+  }
+};
+
+
 
 exports.getAntecedentesMaestraReportesById = async (req, res) => {
   const { id } = req.params;

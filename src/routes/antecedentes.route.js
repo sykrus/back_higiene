@@ -16,6 +16,8 @@ router.get('/maestra/:id', antecedentesController.getAntecedentesMaestraById);
 
 router.get('/maestra/unidad/:id', antecedentesController.getAntecedentesMaestraReportesById);
 
+router.get('/maestra/tipo/:id', antecedentesController.getAntecedentesMaestraTipoReporte);
+
 // Crear un nuevo registro de Normas
 router.post('/maestra', antecedentesController.createAntecedentesMaestra);
 
