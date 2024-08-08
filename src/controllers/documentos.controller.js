@@ -751,7 +751,7 @@ FROM documentos
 LEFT JOIN organigrama ON organigrama_id = organigrama.id
 LEFT JOIN estatus ON estatus_id = estatus.id
 LEFT JOIN tipo_documentos ON tipo_documento_id = tipo_documentos.id
-WHERE datos_normas ILIKE $1 
+WHERE datos_normas ILIKE $1  AND documentos.estatus_id = 3 
 GROUP BY organigrama.descripcion, tipo_documento
 ORDER BY organigrama.descripcion, tipo_documento;
 `, [`%${datosNormas}%`], (err, results) => {
