@@ -25,6 +25,9 @@ router.get('/reporte/:id', documentosController.getDocumentoByIdReporte);
 router.get('/reporte/organigrama/:id', documentosController.getDocumentoByIdReporteOrganigrama);
 router.get('/reporte/normas/:datosNormas', documentosController.getDocumentoByIdReporteOrganigramaNormas);
 router.get('/codigo/:tipoDocumentoId/:organigramaId', documentosController.CapturarCodigoDocumento);
+router.get('/reporte/usuarios/conteo/:desde/:hasta', documentosController.listarDocumentosRegistradoPorUsuarios);
+
+
 
 
 router.get('/obtener/documentos/organigrama/:organigrama_id', async (req, res) => {

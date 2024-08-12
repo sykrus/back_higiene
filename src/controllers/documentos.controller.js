@@ -1004,8 +1004,39 @@ const resultado = {
 }
 
 
+const listarDocumentosRegistradoPorUsuarios = async (req, res) => {
+  try {
+    const { desde, hasta } = req.params;
+
+    // Validación de fechas
+    if (!moment(desde, 'YYYY-MM-DD', true).isValid() || !moment(hasta, 'YYYY-MM-DD', true).isValid()) {
+      return res.status(400).json({ error: 'Las fechas proporcionadas no son válidas.' });
+    }
+
+    const consulta = `
+      SELECT u.nombres, u.apellidos, d.usuario_id, COUNT(*) AS cantidad_registros, MAX(d.fecha_registro) AS fecha_ultima_registro
+      FROM public.documentos d
+      LEFT JOIN public.usuarios u ON d.usuario_id = u.id
+      WHERE d.fecha_registro BETWEEN $1 AND $2
+      GROUP BY u.nombres, u.apellidos, d.usuario_id;
+    `;
+
+    const resultados = await pool.query(consulta, [desde, hasta]);
+
+    const documentosConRuta = resultados.rows.map((documento) => ({
+      ...documento,
+      fecha_ultima_registro: moment(documento.fecha_ultima_registro).format('YYYY-MM-DD'),
+    }));
+
+    res.status(200).json(documentosConRuta);
+  } catch (error) {
+    console.error('Error al obtener la lista de documentos:', error);
+    return res.status(500).json({ error: 'Error al obtener la lista de documentos' });
+  }
+};
+
 
 module.exports = { subirArchivo, listarDocumentos, updateDocumento, getDocumentoReporteGeneral, getDocumentoById, actualizarArchivo, getDocumentoByIdReporte, 
   getDocumentoByIdReporteOrganigrama, getDocumentoByIdReporteOrganigramaNormas, CapturarCodigoDocumento, getDocumentoReporteObsoletos, listarDocumentosFechaRevision, listarDocumentosPublicos, 
-  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama, obtenerDocumentosPorOrganigrama, listarDocumentosCombo, getDocumentoReporteGeneralPublico
+  getDocumentoReporteVencidos, getDocumentoReporteVencidosPorOrganigrama, obtenerDocumentosPorOrganigrama, listarDocumentosCombo, getDocumentoReporteGeneralPublico, listarDocumentosRegistradoPorUsuarios
 };
