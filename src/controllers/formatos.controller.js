@@ -154,15 +154,25 @@ const actualizarArchivo = async (req, res) => {
 // Obtener la lista de documentos
 const listarDocumentos = async (req, res) => {
   try {
-    // Consulta SQL para obtener la lista de documentos
-    const consulta = `
+    // Obtener el id de los parámetros de la solicitud
+    const { id } = req.params;
+
+    // Consulta SQL para obtener la lista de documentos filtrada por el id
+    let consulta = `
       SELECT formatos.id, descripcion_documento, fecha_registro, nombre_documento, tipo_formato 
       FROM formatos
       LEFT JOIN tipo_formatos ON tipo_formato_id = tipo_formatos.id
-      `
+    `;
+
+    // Si el id está presente, agrega la cláusula WHERE
+    if (id) {
+      consulta += ` WHERE tipo_formato_id = $1`; // Usar parámetro seguro
+    }
+
+    consulta += ` ORDER BY formatos.id ASC`;
 
     // Ejecuta la consulta SQL
-    const resultados = await db.query(consulta);
+    const resultados = await db.query(consulta, id ? [id] : []);
 
     // Agrega la ruta completa de acceso a cada archivo
     const documentosConRuta = resultados.rows.map((documento) => ({

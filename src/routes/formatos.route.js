@@ -6,7 +6,7 @@ const router = Router();
 
 
 router.post('/subir-archivo', formatosController.subirArchivo);
-router.get('/listado', formatosController.listarDocumentos);
+router.get('/listado/:id?', formatosController.listarDocumentos);
 router.get('/:id', formatosController.getFormatosById);
 router.delete('/:id', formatosController.deleteFormatos);
 
